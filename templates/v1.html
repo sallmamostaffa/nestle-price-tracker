@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amazon Product Price Tracker - Nestlé Waters Egypt</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            padding-bottom: 30px;
+        }
+        .header {
+            background-color: #0073b1;
+            color: white;
+            padding: 20px 0;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            font-weight: 600;
+        }
+        .card {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            border: none;
+            border-radius: 8px;
+        }
+        .card-header {
+            background-color: #0073b1;
+            color: white;
+            font-weight: 600;
+            border-radius: 8px 8px 0 0 !important;
+        }
+        .btn-primary {
+            background-color: #0073b1;
+            border-color: #0073b1;
+        }
+        .btn-primary:hover {
+            background-color: #005785;
+            border-color: #005785;
+        }
+        .btn-outline-primary {
+            color: #0073b1;
+            border-color: #0073b1;
+        }
+        .btn-outline-primary:hover {
+            background-color: #0073b1;
+            border-color: #0073b1;
+            color: white;
+        }
+        .table {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        .table th {
+            background-color: #f0f2f5;
+        }
+        .table-striped tbody tr:nth-of-type(odd) {
+            background-color: rgba(0, 115, 177, 0.05);
+        }
+        .nestle-color {
+            color: #0073b1;
+        }
+        .stats-value {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #0073b1;
+        }
+        .stats-label {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        .stats-card {
+            transition: transform 0.3s;
+        }
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255,255,255,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            flex-direction: column;
+        }
+        .loading-text {
+            margin-top: 20px;
+            font-size: 1.2rem;
+            color: #0073b1;
+        }
+        .footer {
+            background-color: #f0f2f5;
+            padding: 15px 0;
+            text-align: center;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        .logo {
+            max-height: 40px;
+            margin-right: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <div class="d-flex align-items-center">
+                <img src="https://www.nestle-waters.com/sites/g/files/pydnoa606/files/2023-10/nwl_fb.png" alt="Nestlé Waters Logo" class="logo">
+                <h1>Amazon Product Price Tracker</h1>
+            </div>
+            <p class="mb-0">Commercial Development Team - Competitive Price Analysis Tool</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-search me-2"></i> Search Products
+                    </div>
+                    <div class="card-body">
+                        <form action="/scrape" method="post" id="scrapeForm">
+                            <div class="row g-3 align-items-center">
+                                <div class="col-md-5">
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-keyboard"></i></span>
+                                        <input type="text" class="form-control" name="keyword" placeholder="Enter product keyword (e.g., water)" value="water" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-list-ol"></i></span>
+                                        <input type="number" class="form-control" name="max_products" min="1" max="100" value="48" placeholder="Max products">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="detailed" id="detailedCheck">
+                                        <label class="form-check-label" for="detailedCheck">
+                                            Detailed info (slower)
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="submit" class="btn btn-primary w-100" id="scrapeBtn">
+                                        <i class="fas fa-spider me-2"></i>Scrape Products
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if products is not none %}
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i> Last scrape completed on <strong>{{ last_scrape }}</strong>. Found <strong>{{ products|length }}</strong> products.
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="nestle-color">
+                        <i class="fas fa-chart-line me-2"></i> Price Analysis
+                    </h3>
+                    <a href="/download_stats" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-download me-2"></i>Download Price Statistics
+                    </a>
+                </div>
+
+                <div class="row">
+                    {% if stats and "message" not in stats %}
+                        <div class="col-md-3">
+                            <div class="card stats-card">
+                                <div class="card-body text-center">
+                                    <div class="stats-value">{{ stats["Average Price"] }}</div>
+                                    <div class="stats-label">Average Price</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card stats-card">
+                                <div class="card-body text-center">
+                                    <div class="stats-value">{{ stats["Minimum Price"] }}</div>
+                                    <div class="stats-label">Minimum Price</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card stats-card">
+                                <div class="card-body text-center">
+                                    <div class="stats-value">{{ stats["Maximum Price"] }}</div>
+                                    <div class="stats-label">Maximum Price</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card stats-card">
+                                <div class="card-body text-center">
+                                    <div class="stats-value">{{ stats["Number of Products"] }}</div>
+                                    <div class="stats-label">Products Analyzed</div>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="col-md-12">
+                            <div class="alert alert-warning">
+                                No valid price data available for analysis.
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="nestle-color">
+                        <i class="fas fa-water me-2"></i> Product Listings
+                    </h3>
+                    <a href="/download" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-download me-2"></i>Download CSV
+                    </a>
+                </div>
+                <div class="card">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Product Title</th>
+                                        <th>Price</th>
+                                        <th>Rating</th>
+                                        <th>Review Count</th>
+                                        <th>Availability</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for index, product in products.iterrows() %}
+                                    <tr>
+                                        <td>{{ index + 1 }}</td>
+                                        <td>{{ product["Product Title"] }}</td>
+                                        <td class="font-weight-bold">{{ product["Price"] }}</td>
+                                        <td>{{ product["Rating"] }}</td>
+                                        <td>{{ product["Review Count"] }}</td>
+                                        <td>{{ product["Availability"] }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <img src="https://www.nestle-waters.com/sites/g/files/pydnoa606/files/2023-10/nwl_fb.png" alt="Nestlé Waters Logo" style="max-height: 80px; margin-bottom: 20px;">
+                        <h3 class="mb-3 nestle-color">Welcome to the Amazon Product Price Tracker</h3>
+                        <p class="mb-4">Use this tool to scrape and analyze competitor product prices from Amazon. <br>Click the "Scrape Products" button above to get started.</p>
+                        <div class="row justify-content-center">
+                            <div class="col-md-6">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i> This tool helps track competitor pricing for water and beverages on Amazon Egypt.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="footer">
+        <div class="container">
+            <p class="mb-0">© {{ now.year }} Nestlé Waters Egypt - Commercial Development Team | Built for internal price analysis</p>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading" id="loadingOverlay" style="display: none;">
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <div class="loading-text">Scraping product data... Please wait</div>
+    </div>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Show loading overlay when form is submitted
+        document.getElementById('scrapeForm').addEventListener('submit', function() {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        });
+
+        // Set current year for footer
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add any initialization code here
+        });
+    </script>
+</body>
+</html>
